@@ -70,8 +70,10 @@ jobs:
           }
           JAVA
           find android/app/src/main/java work/gen -name '*.java' > work/sources.txt
+          # Lambdas need java.lang.invoke, which android.jar lacks; AGP adds
+          # the same stubs from build-tools.
           javac -source 8 -target 8 -nowarn -encoding UTF-8 \
-            -bootclasspath "$ANDROID_JAR" -d work/classes @work/sources.txt
+            -bootclasspath "$ANDROID_JAR:$BT/core-lambda-stubs.jar" -d work/classes @work/sources.txt
           "$BT/d8" --release --min-api 24 --lib "$ANDROID_JAR" --output work/dex \
             $(find work/classes -name '*.class')
           cp work/dex/classes.dex work/dec/classes.dex
