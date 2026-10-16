@@ -301,8 +301,20 @@ public class BanjoSDLActivity extends SDLActivity {
         }
     }
 
+    /** The running game activity, for DualScreenStatsActivity's controller forwarding. */
+    static BanjoSDLActivity current() {
+        return currentActivity;
+    }
+
+    // In the swapped layout the stats activity on the other display holds
+    // window focus while the game keeps running, so focus can't mean "in the
+    // foreground" there (it muted the game and hid the panel).
+    private boolean inForeground() {
+        return activityResumed && (windowFocused || DualScreenSwap.isSwapped(this));
+    }
+
     private void updateAppAudioActive() {
-        boolean active = activityResumed && windowFocused;
+        boolean active = inForeground();
         if (active != appAudioActive) {
             appAudioActive = active;
             nativeSetAppAudioActive(active);
@@ -311,7 +323,7 @@ public class BanjoSDLActivity extends SDLActivity {
 
     private void updateDualScreenForeground() {
         if (dualScreenStatsManager != null) {
-            dualScreenStatsManager.setAppForeground(activityResumed && windowFocused);
+            dualScreenStatsManager.setAppForeground(inForeground());
         }
     }
 

@@ -15,10 +15,27 @@
             android:launchMode="singleTask"
             android:screenOrientation="landscape"
             android:theme="@style/BanjoTheme">
+        </activity>
+        <!-- Launcher trampoline: starts the game on the secondary display for
+             the swapped layout (see DualScreenSwap). -->
+        <activity
+            android:name="io.github.banjorecomp.BanjoLauncherActivity"
+            android:exported="true"
+            android:label="Banjo Recompiled"
+            android:noHistory="true"
+            android:excludeFromRecents="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- Stats panel on the default display in the swapped layout. -->
+        <activity
+            android:name="io.github.banjorecomp.DualScreenStatsActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode|navigation"
+            android:theme="@style/BanjoTheme" />
     </application>
 </manifest>

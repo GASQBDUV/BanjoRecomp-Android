@@ -1,6 +1,8 @@
 package io.github.banjorecomp;
 
-import android.app.Presentation;
+import android.app.Activity;
+import android.app.ActivityOptions;
+import android.content.Intent;
 import android.content.Context;
 import android.hardware.display.DisplayManager;
 import android.util.Log;
@@ -15,6 +17,22 @@ import java.util.concurrent.Executors;
 
 public class DualScreenStatsManager implements DisplayManager.DisplayListener {
     private static final String TAG = "DualScreenStats";
+
+    /** Where the panel is drawn: the Presentation, or the swapped-layout activity. */
+    interface StatsSink {
+        void updateStats(DualScreenStats stats);
+        void setTheme(BanjoSpriteTheme theme);
+    }
+
+    private static DualScreenStatsManager currentManager;
+
+    static DualScreenStatsManager current() {
+        return currentManager;
+    }
+
+    // Swapped layout (game on the secondary display): the panel is an activity
+    // on the default display instead of a Presentation.
+    private boolean statsActivityRequested;
 
     private final Context context;
     private final DisplayManager displayManager;
@@ -43,6 +61,7 @@ public class DualScreenStatsManager implements DisplayManager.DisplayListener {
         }
 
         started = true;
+        currentManager = this;
         themeExecutor = Executors.newSingleThreadExecutor();
         displayManager.registerDisplayListener(this, null);
         logPresentationDisplays();
@@ -55,6 +74,9 @@ public class DualScreenStatsManager implements DisplayManager.DisplayListener {
         }
 
         dismissPresentation();
+        if (currentManager == this) {
+            currentManager = null;
+        }
         if (themeExecutor != null) {
             themeExecutor.shutdownNow();
             themeExecutor = null;
@@ -107,9 +129,7 @@ public class DualScreenStatsManager implements DisplayManager.DisplayListener {
                     + " transition=" + stats.gameTransitionPhase
                     + " map=0x" + Integer.toHexString(stats.levelId));
         }
-        if (presentation != null) {
-            applyPresentationMode();
-        }
+        applyPresentationMode();
     }
 
     public void previewStatsBackground(int mapId) {
@@ -207,6 +227,10 @@ public class DualScreenStatsManager implements DisplayManager.DisplayListener {
         if (presentation != null) {
             presentation.setTheme(spriteTheme);
         }
+        DualScreenStatsActivity statsActivity = DualScreenStatsActivity.instance;
+        if (statsActivityRequested && statsActivity != null) {
+            statsActivity.setTheme(spriteTheme);
+        }
         Log.i(TAG, "Dual-screen sprite theme loaded=" + spriteTheme.isLoadedFromRom());
     }
 
@@ -247,6 +271,11 @@ public class DualScreenStatsManager implements DisplayManager.DisplayListener {
 
         if (!appForeground) {
             dismissPresentation();
+            return;
+        }
+
+        if (gameIsSwapped()) {
+            showStatsActivity();
             return;
         }
 
@@ -297,14 +326,57 @@ public class DualScreenStatsManager implements DisplayManager.DisplayListener {
         return false;
     }
 
-    private void applyPresentationMode() {
-        if (presentation == null) {
+    private boolean gameIsSwapped() {
+        return context instanceof Activity && DualScreenSwap.isSwapped((Activity) context);
+    }
+
+    private void showStatsActivity() {
+        if (statsActivityRequested) {
+            applyPresentationMode();
             return;
         }
-        presentation.updateStats(latestStats);
+        Intent intent = new Intent(context, DualScreenStatsActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+        ActivityOptions options = ActivityOptions.makeBasic();
+        options.setLaunchDisplayId(Display.DEFAULT_DISPLAY);
+        try {
+            context.startActivity(intent, options.toBundle());
+            statsActivityRequested = true;
+            Log.i(TAG, "Showing dual-screen stats activity on the default display (swapped)");
+        } catch (RuntimeException e) {
+            Log.w(TAG, "Unable to start stats activity on the default display", e);
+        }
+    }
+
+    /** Called by DualScreenStatsActivity once its view exists. */
+    void onStatsActivityReady(DualScreenStatsActivity activity) {
+        if (!statsActivityRequested) {
+            // Came up after the game left the foreground; don't leave it behind.
+            activity.finish();
+            return;
+        }
+        activity.setTheme(spriteTheme);
+        activity.updateStats(latestStats);
+    }
+
+    private void applyPresentationMode() {
+        if (presentation != null) {
+            presentation.updateStats(latestStats);
+        }
+        DualScreenStatsActivity statsActivity = DualScreenStatsActivity.instance;
+        if (statsActivityRequested && statsActivity != null) {
+            statsActivity.updateStats(latestStats);
+        }
     }
 
     private void dismissPresentation() {
+        if (statsActivityRequested) {
+            statsActivityRequested = false;
+            DualScreenStatsActivity statsActivity = DualScreenStatsActivity.instance;
+            if (statsActivity != null) {
+                statsActivity.finish();
+            }
+        }
         if (presentation == null) {
             return;
         }

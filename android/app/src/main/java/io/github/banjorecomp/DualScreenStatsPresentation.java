@@ -6,7 +6,7 @@ import android.view.Display;
 import android.view.KeyEvent;
 import android.view.Window;
 
-public class DualScreenStatsPresentation extends Presentation {
+public class DualScreenStatsPresentation extends Presentation implements DualScreenStatsManager.StatsSink {
     public interface DebugKeyHandler {
         boolean onDebugKey(int keyCode, KeyEvent event);
     }
@@ -38,6 +38,12 @@ public class DualScreenStatsPresentation extends Presentation {
         Window window = getWindow();
         if (window != null) {
             window.setBackgroundDrawableResource(android.R.color.black);
+            // A Presentation is a Dialog, and a Dialog's window is focusable
+            // by default. A controller follows the focused display, so the
+            // first tap on the panel took the controller away from the game
+            // (and, since the game's window lost focus, muted it and hid this
+            // panel). Non-focusable windows still receive touch.
+            window.addFlags(android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
         }
 
         statsView = new DualScreenStatsView(getContext(), debugAreaButtonHandler);
@@ -57,12 +63,14 @@ public class DualScreenStatsPresentation extends Presentation {
         }
     }
 
+    @Override
     public void updateStats(DualScreenStats stats) {
         if (statsView != null) {
             statsView.updateStats(stats);
         }
     }
 
+    @Override
     public void setTheme(BanjoSpriteTheme theme) {
         if (statsView != null) {
             statsView.setTheme(theme);
