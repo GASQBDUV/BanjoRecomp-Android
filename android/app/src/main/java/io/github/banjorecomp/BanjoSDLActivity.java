@@ -408,8 +408,47 @@ public class BanjoSDLActivity extends SDLActivity {
         });
     }
 
+    // ROM file names checked in the app's external files dir
+    // (Android/data/<package>/files/) before the document picker is opened.
+    private static final String[] PLACED_ROM_NAMES = {
+        "baserom.z64", "baserom.n64", "baserom.v64",
+        "banjo.z64", "banjo.n64", "banjo.v64"
+    };
+
+    /**
+     * A ROM the user dropped into the app's external files dir, or null.
+     * Lets the ROM be loaded without the document picker, which on 1 GB
+     * devices (RG DS Plus) can push the game out of memory, and which may
+     * open on a screen without touch in the dual-screen layout.
+     */
+    private File findPlacedRom() {
+        File dir = getExternalFilesDir(null);
+        if (dir == null) {
+            return null;
+        }
+        for (String name : PLACED_ROM_NAMES) {
+            File candidate = new File(dir, name);
+            if (candidate.isFile() && candidate.canRead() && candidate.length() > 0) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
     public void openRomFilePicker() {
         runOnUiThread(() -> {
+            File placedRom = findPlacedRom();
+            if (placedRom != null) {
+                // The native side validates the file and copies it into its
+                // own storage, exactly as for a picked document.
+                Log.i(TAG, "Using placed ROM " + placedRom.getAbsolutePath());
+                if (dualScreenStatsManager != null) {
+                    dualScreenStatsManager.loadThemeFromRom(placedRom);
+                }
+                nativeOnRomSelected(placedRom.getAbsolutePath());
+                return;
+            }
+
             if (dualScreenStatsManager != null) {
                 dualScreenStatsManager.hideForExternalActivity();
             }
@@ -427,6 +466,11 @@ public class BanjoSDLActivity extends SDLActivity {
                 startActivityForResult(intent, REQUEST_SELECT_ROM);
             } catch (ActivityNotFoundException e) {
                 Log.e(TAG, "No Android document picker is available for loading ROMs", e);
+                nativeOnRomSelected(null);
+            } catch (RuntimeException e) {
+                // e.g. a SecurityException launching the picker from a
+                // secondary display; report "no ROM" instead of crashing.
+                Log.e(TAG, "Unable to open the document picker for loading ROMs", e);
                 nativeOnRomSelected(null);
             }
         });
