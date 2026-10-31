@@ -19,8 +19,8 @@ Grab `Lighthouse-bananaos-companion-screen-*.zip` from the [releases](https://gi
 
 1. Install the Lighthouse port for bananaOS first (Jeod's [RHH-Ports](https://jeodc.github.io/RHH-Ports/) build) and start it once, so it builds `bk.o2r` from your own ROM.
 2. Unzip into your ports folder (`/roms/ports`), merging with the existing `lighthouse` folder. It adds `Lighthouse.bananaos`,
-   `libs-bananaos/` and `Lighthouse (2 screens).sh`; the original launcher keeps working.
-3. Start **Lighthouse (2 screens)** from the menu.
+   `libs-bananaos/` and `Lighthouse - 2 Screens.sh`; the original launcher keeps working.
+3. Start **Lighthouse - 2 Screens** from the menu.
 
 ## How it works
 
@@ -39,7 +39,7 @@ It is off unless `BANANA_PANEL=1` is set, and does nothing on other systems (the
 | `src/port/BananaPanel.cpp` | the companion screen; goes in `src/port/` of Lighthouse (picked up by the source glob) |
 | `patches/lighthouse-bananaos.patch` | CMake: link libdrm. `gameloop.c`: `GetCurrentGameMode()` and the per-frame tick. Apply in the Lighthouse root |
 | `patches/libultraship-bananaos.patch` | calls `BananaPanel_Start` once the GL window exists. Apply inside `libultraship/` |
-| `Lighthouse (2 screens).sh` | launcher: lights the bottom panel's backlight and sets `BANANA_PANEL=1`; runs `lighthouse/Lighthouse.bananaos` with the libs in `libs-bananaos/` |
+| `Lighthouse - 2 Screens.sh` | launcher (no parentheses in the name: bananaOS' menu ignores text in parentheses, so it would show up as a second "Lighthouse"): lights the bottom panel's backlight and sets `BANANA_PANEL=1`; runs `lighthouse/Lighthouse.bananaos` with the libs in `libs-bananaos/` |
 | `apply.sh` | applies the above to a Lighthouse checkout |
 
 Made against Lighthouse `bdb8cd9` (v1.2.2) and the [JeodC/libultraship](https://github.com/JeodC/libultraship) `bk-lighthouse` branch.
