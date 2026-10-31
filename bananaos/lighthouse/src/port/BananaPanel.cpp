@@ -158,11 +158,12 @@ int gsworld_getMap(void);
 int jiggyscore_total(void);
 int itemscore_noteScores_getTotal(void);
 int honeycombscore_get_total(void);
+int fileProgressFlag_get(int flag);
 const char* port_getLevelName(int map_id);
 }
 
 enum { ITEM_NOTE = 0xC, ITEM_EGGS = 0xD, ITEM_JIGGY = 0xE, ITEM_RED_FEATHER = 0xF, ITEM_GOLD_FEATHER = 0x10,
-       ITEM_JINJOS = 0x12, ITEM_HEALTH = 0x14, ITEM_HEALTH_TOTAL = 0x15, ITEM_LIFE = 0x16, ITEM_MUMBO_TOKEN = 0x1C };
+       ITEM_JINJOS = 0x12, ITEM_MUMBO_TOKEN_TOTAL = 0x25, ITEM_JIGGY_TOTAL = 0x26, ITEM_HEALTH = 0x14, ITEM_HEALTH_TOTAL = 0x15, ITEM_LIFE = 0x16, ITEM_MUMBO_TOKEN = 0x1C };
 
 // the port's in-memory sprite (src/port/Resource/Type/Sprite.cpp: BKSprite, BKSpriteFrame and BKSpriteTextureBlock)
 struct SpriteHdr { int16_t frameCnt, type, unk4, unk6, unk8, unkA; uint32_t unkC; void* frames[]; };
@@ -395,10 +396,192 @@ void LoadAssets() {
     fprintf(stderr, "BananaPanel: %d glyphs\n", (int)g_glyphs.size());
 }
 
+const int kAreas[][3] = {
+    { 0x01, 0x14CF, 71 },
+    { 0x02, 0x14AA, 0 },
+    { 0x05, 0x146F, 0 },
+    { 0x06, 0x146D, 0 },
+    { 0x07, 0x146B, 0 },
+    { 0x8F, 0x1473, 0 },
+    { 0x0A, 0x1471, 0 },
+    { 0x0B, 0x14ED, 0 },
+    { 0x0C, 0x14AC, 0 },
+    { 0x0D, 0x14D1, 0 },
+    { 0x0E, 0x14AE, 0 },
+    { 0x10, 0x14D3, 0 },
+    { 0x11, 0x14D4, 0 },
+    { 0x12, 0x1474, 0 },
+    { 0x92, 0x147E, 0 },
+    { 0x13, 0x1476, 0 },
+    { 0x14, 0x1478, 0 },
+    { 0x15, 0x147A, 0 },
+    { 0x16, 0x147C, 0 },
+    { 0x1A, 0x147D, 0 },
+    { 0x1B, 0x147F, 0 },
+    { 0x1C, 0x1486, 0 },
+    { 0x1D, 0x1482, 0 },
+    { 0x1E, 0x149D, 0 },
+    { 0x1F, 0x14A0, 0 },
+    { 0x20, 0x14A9, 0 },
+    { 0x21, 0x14EF, 0 },
+    { 0x22, 0x14F0, 0 },
+    { 0x23, 0x14F2, 0 },
+    { 0x24, 0x1488, 0 },
+    { 0x25, 0x1495, 0 },
+    { 0x26, 0x1485, 0 },
+    { 0x27, 0x14C8, 0 },
+    { 0x28, 0x1489, 0 },
+    { 0x29, 0x148B, 0 },
+    { 0x2A, 0x148D, 0 },
+    { 0x2B, 0x1483, 0 },
+    { 0x2C, 0x148F, 0 },
+    { 0x2D, 0x1491, 0 },
+    { 0x2E, 0x1493, 0 },
+    { 0x2F, 0x1481, 0 },
+    { 0x30, 0x14AE, 0 },
+    { 0x8D, 0x1498, 0 },
+    { 0x31, 0x14B0, 0 },
+    { 0x8B, 0x14C5, 0 },
+    { 0x34, 0x14B2, 0 },
+    { 0x35, 0x14B4, 0 },
+    { 0x36, 0x14B6, 0 },
+    { 0x37, 0x14B8, 0 },
+    { 0x38, 0x14BA, 0 },
+    { 0x39, 0x14BD, 0 },
+    { 0x3A, 0x14BE, 0 },
+    { 0x3B, 0x14C1, 0 },
+    { 0x3C, 0x14C3, 0 },
+    { 0x3D, 0x14C0, 0 },
+    { 0x3E, 0x14B9, 0 },
+    { 0x3F, 0x14BB, 0 },
+    { 0x40, 0x14D8, 0 },
+    { 0x41, 0x14CA, 0 },
+    { 0x7F, 0x14CC, 0 },
+    { 0x43, 0x14D9, 0 },
+    { 0x44, 0x14DA, 0 },
+    { 0x45, 0x14DB, 0 },
+    { 0x46, 0x14DC, 0 },
+    { 0x47, 0x14AE, 0 },
+    { 0x48, 0x14AE, 0 },
+    { 0x4A, 0x14AE, 0 },
+    { 0x4B, 0x14AE, 0 },
+    { 0x4C, 0x14AE, 0 },
+    { 0x4D, 0x14AE, 0 },
+    { 0x53, 0x14CB, 0 },
+    { 0x5A, 0x14DD, 0 },
+    { 0x5B, 0x14DD, 0 },
+    { 0x5C, 0x14DD, 0 },
+    { 0x5E, 0x14DE, 0 },
+    { 0x5F, 0x14DE, 0 },
+    { 0x60, 0x14DE, 0 },
+    { 0x61, 0x14DE, 0 },
+    { 0x62, 0x14E0, 0 },
+    { 0x63, 0x14E1, 0 },
+    { 0x64, 0x14E1, 0 },
+    { 0x65, 0x14DF, 0 },
+    { 0x66, 0x14DF, 0 },
+    { 0x67, 0x14DF, 0 },
+    { 0x68, 0x14DF, 0 },
+    { 0x69, 0x14F3, 0 },
+    { 0x6A, 0x14F4, 0 },
+    { 0x6B, 0x14F5, 0 },
+    { 0x6C, 0x14F6, 0 },
+    { 0x6D, 0x14F7, 0 },
+    { 0x6E, 0x14F8, 0 },
+    { 0x6F, 0x14F9, 0 },
+    { 0x74, 0x14FD, 0 },
+    { 0x70, 0x14FB, 0 },
+    { 0x75, 0x14FE, 0 },
+    { 0x7A, 0x14FF, 0 },
+    { 0x71, 0x1500, 0 },
+    { 0x72, 0x1501, 0 },
+    { 0x76, 0x1502, 0 },
+    { 0x77, 0x1503, 0 },
+    { 0x78, 0x1504, 0 },
+    { 0x79, 0x1505, 0 },
+    { 0x80, 0x1506, 0 },
+    { 0x93, 0x150F, 0 },
+    { 0x90, 0x14FC, 0 },
+    { 0x7B, 0x150F, 0 },
+    { 0x7C, 0x14A2, 0 },
+    { 0x7D, 0x14CF, 0 },
+    { 0x7E, 0x14CF, 0 },
+    { 0x81, 0x150F, 0 },
+    { 0x82, 0x150F, 0 },
+    { 0x83, 0x150F, 0 },
+    { 0x84, 0x150F, 0 },
+    { 0x85, 0x14CF, 0 },
+    { 0x86, 0x14CF, 0 },
+    { 0x87, 0x14A6, 0 },
+    { 0x88, 0x14CF, 0 },
+    { 0x94, 0x14CF, 0 },
+    { 0x98, 0x149F, 0 },
+    { 0x99, 0x149F, 0 },
+    { 0x95, 0x14A9, 0 },
+    { 0x89, 0x14A2, 0 },
+    { 0x8A, 0x14A2, 0 },
+    { 0x96, 0x14A9, 0 },
+    { 0x97, 0x14A9, 0 },
+    { 0x91, 0x14A2, 0 },
+    { 0x8C, 0x14A2, 0 },
+    { 0x8E, 0x14E8, 0 },
+};
+
+// a model's texture, for the world backdrops (the port keeps the model's texture list as the ROM lays it out)
+bool DecodeModelTexture(const uint8_t* model, int index, Image& out) {
+    int16_t listOff = *(const int16_t*)(model + 8);
+    if (listOff <= 0) return false;
+    const uint8_t* list = model + listOff;
+    int count = *(const int16_t*)(list + 4);
+    if (index < 0 || index >= count || count > 256) return false;
+    const uint8_t* info = list + 8 + index * 16;
+    int off = *(const int32_t*)info, type = *(const int16_t*)(info + 4);
+    int w = info[8], h = info[9];
+    int fmt = type == 1 ? FMT_CI4 : type == 2 ? FMT_CI8 : type == 4 ? FMT_RGBA16 : type == 8 ? FMT_RGBA32 : type == 16 ? FMT_I8 : 0;
+    if (!fmt || w <= 0 || h <= 0) return false;
+    const uint8_t* pix = list + 8 + count * 16 + off;
+    const uint8_t* pal = nullptr;
+    if (fmt == FMT_CI4) { pal = pix; pix += 0x20; }
+    else if (fmt == FMT_CI8) { pal = pix; pix += 0x200; }
+    Image tmp;
+    tmp.w = w;
+    tmp.h = h;
+    tmp.px.resize((size_t)w * h);
+    DecodePixels(pix, pal, fmt, w, h, tmp.px.data());
+    out.w = w;
+    out.h = h;
+    out.px.resize(tmp.px.size());
+    for (int y = 0; y < h; y++) // the model's textures are stored upside down
+        for (int x = 0; x < w; x++) out.px[(size_t)(h - 1 - y) * w + x] = tmp.px[(size_t)y * w + x];
+    return true;
+}
+
+pthread_mutex_t g_bgLock = PTHREAD_MUTEX_INITIALIZER;
+Image g_backdropImg;
+bool g_backdropDirty = false;
+int g_backdropKey = -1;
+
+void LoadBackdrop(int map) {
+    int asset = 0x14AA, tex = 0; // Mumbo's Mountain where a map has none
+    for (const auto& a : kAreas)
+        if (a[0] == map) { asset = a[1]; tex = a[2]; break; }
+    if (asset * 256 + tex == g_backdropKey) return;
+    g_backdropKey = asset * 256 + tex;
+    void* m = assetcache_get(asset);
+    Image img;
+    bool ok = m && DecodeModelTexture((const uint8_t*)m, tex, img);
+    if (m) assetcache_release(m);
+    if (!ok) { fprintf(stderr, "BananaPanel: backdrop 0x%x[%d] for map 0x%x failed\n", asset, tex, map); return; }
+    pthread_mutex_lock(&g_bgLock);
+    g_backdropImg = std::move(img);
+    g_backdropDirty = true;
+    pthread_mutex_unlock(&g_bgLock);
+}
+
 // ---- state snapshot, written by the game thread each frame --------------------------------------------------------
 struct Snap {
     volatile int mode = 0, level = 0, map = 0, health = 0, maxHealth = 5, lives = 0, notes = 0, eggs = 0, red = 0, gold = 0,
-                 jiggies = 0, tokens = 0, jinjos = 0, completion = 0;
+                 jiggies = 0, tokens = 0, jinjos = 0, completion = 0, lair = 0;
     char name[64] = "";
 };
 Snap g_snap;
@@ -515,7 +698,40 @@ uint32_t LevelColor(int level) {
     return 0xFF000000 | c[level >= 0 && level <= 12 ? level : 0];
 }
 
+uint32_t* g_bg = nullptr;
+bool g_bgHas = false;
+
+// the world's own picture, covering the screen and darkened, kept in a buffer of its own
+void RebuildBackdrop() {
+    pthread_mutex_lock(&g_bgLock);
+    if (g_backdropDirty && !g_backdropImg.px.empty()) {
+        if (!g_bg) g_bg = (uint32_t*)calloc(1, g_front_bytes);
+        uint32_t* saved = g_buf.px;
+        g_buf.px = g_bg;
+        Fill(0, 0, g_buf.w, g_buf.h, 0xFF000000);
+        float sc = std::max(g_buf.w / (float)g_backdropImg.w, g_buf.h / (float)g_backdropImg.h);
+        float dw = g_backdropImg.w * sc, dh = g_backdropImg.h * sc;
+        DrawImage(g_backdropImg, (g_buf.w - dw) / 2, (g_buf.h - dh) / 2, (g_buf.w + dw) / 2, (g_buf.h + dh) / 2, 255);
+        for (int y = 0; y < g_buf.h; y++) {
+            uint32_t* row = g_buf.px + (size_t)y * g_buf.pitch;
+            for (int x = 0; x < g_buf.w; x++) {
+                uint32_t p = row[x];
+                row[x] = 0xFF000000u | ((((p >> 16) & 255) * 110 / 255) << 16) | ((((p >> 8) & 255) * 110 / 255) << 8) | ((p & 255) * 110 / 255);
+            }
+        }
+        g_buf.px = saved;
+        g_bgHas = true;
+        g_backdropDirty = false;
+    }
+    pthread_mutex_unlock(&g_bgLock);
+}
+
 void Backdrop(int level) {
+    RebuildBackdrop();
+    if (g_bgHas) {
+        memcpy(g_buf.px, g_bg, g_front_bytes);
+        return;
+    }
     uint32_t base = LevelColor(level);
     for (int y = 0; y < g_buf.h; y++) {
         int k = 70 - y * 35 / g_buf.h;
@@ -543,6 +759,11 @@ void DrawStats(long ms) {
     float spacing = max > 8 ? 68 : 78, size = max > 8 ? 74 : 82;
     for (int i = 0; i < max; i++) DrawIcon(S_HEALTH, 420 + i * spacing, 112, size, i < health ? 255 : 70, ms, i);
 
+    // Spiral Mountain shows nothing but Banjo and the honeycombs until Gruntilda's Lair has been reached
+    if (level == 11 && !g_snap.lair) {
+        DrawTextCentered(g_snap.name[0] ? g_snap.name : "BANJO KAZOOIE", 620, 990, 68, 1120);
+        return;
+    }
     struct Stat { int sprite; int value; float x, nx, y, size; int phase; };
     const Stat stats[] = {
         { S_NOTE, g_snap.notes, 280, 380, 268, 112, 1 },     { S_EGG, g_snap.eggs, 760, 860, 268, 112, 2 },
@@ -609,16 +830,19 @@ extern "C" void BananaPanel_GameTick(void) {
         g_snap.map = map;
         const char* n = port_getLevelName(map);
         snprintf((char*)g_snap.name, sizeof g_snap.name, "%s", n ? n : "");
+        LoadBackdrop(map);
     }
     g_snap.health = item_getCount(ITEM_HEALTH);
     g_snap.maxHealth = item_getCount(ITEM_HEALTH_TOTAL);
     g_snap.lives = item_getCount(ITEM_LIFE);
-    g_snap.notes = item_getCount(ITEM_NOTE);
+    int lairLevel = g_snap.level == 6;
+    g_snap.notes = lairLevel ? itemscore_noteScores_getTotal() : item_getCount(ITEM_NOTE);
     g_snap.eggs = item_getCount(ITEM_EGGS);
     g_snap.red = item_getCount(ITEM_RED_FEATHER);
     g_snap.gold = item_getCount(ITEM_GOLD_FEATHER);
-    g_snap.jiggies = item_getCount(ITEM_JIGGY);
-    g_snap.tokens = item_getCount(ITEM_MUMBO_TOKEN);
+    g_snap.jiggies = lairLevel ? jiggyscore_total() : item_getCount(ITEM_JIGGY_TOTAL);
+    g_snap.tokens = item_getCount(ITEM_MUMBO_TOKEN_TOTAL);
+    g_snap.lair = fileProgressFlag_get(0xBD) ? 1 : 0; // FILEPROG_BD_ENTER_LAIR_CUTSCENE
     g_snap.jinjos = item_getCount(ITEM_JINJOS);
     int total = jiggyscore_total() + itemscore_noteScores_getTotal() + honeycombscore_get_total();
     g_snap.completion = std::max(0, std::min(100, (total * 100 + 512) / 1024));

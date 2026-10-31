@@ -8,7 +8,8 @@ on dual-screen handhelds running **bananaOS**: the game stays on the top panel, 
 
 What the bottom panel shows (only while playing, black in cutscenes, the title screen and the pause menu):
 lives, health honeycombs, notes, eggs, red and gold feathers, Jiggies, Mumbo tokens, the five Jinjos (or the total completion in
-Gruntilda's Lair and Spiral Mountain) and the level's name, all drawn with the game's own sprites and bold font.
+Gruntilda's Lair and Spiral Mountain) and the level's name, all drawn with the game's own sprites and bold font, over the
+world's own picture. Spiral Mountain shows only Banjo, the honeycombs and the name until Gruntilda's Lair has been reached.
 The pictures are read from the game's loaded assets at run time, so they come from your own ROM and nothing is bundled here.
 
 ## How it works
