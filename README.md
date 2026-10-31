@@ -4,7 +4,7 @@
 
 > **Branch `bananaos-linux`: not the Android app.** This branch adds `bananaos/lighthouse/`, a companion screen for the Linux
 > Banjo-Kazooie port [Lighthouse](https://github.com/HarbourMasters/Lighthouse) on **bananaOS** (Anbernic RG DS), using the same layout as the
-> Android display below. The Android app itself is unchanged; build it from the `android` branch as before.
+> Android display below. The Android app itself is unchanged; build it from the [`android` branch](https://github.com/GASQBDUV/BanjoRecomp-Android/tree/android) as before.
 
 > This repository and its releases do not contain game assets. You must provide your own supported Banjo-Kazooie ROM to build or run the project.
 
