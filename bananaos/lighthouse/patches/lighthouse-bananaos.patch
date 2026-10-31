@@ -1,0 +1,42 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 9edd694..90da713 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -509,6 +509,10 @@ option(BUILD_MARIO_ARTIST "Build with Mario Artist support" OFF)
+ option(BUILD_NAUDIO "Build with NAudio support" OFF)
+ add_subdirectory(Torch)
+ target_link_libraries(${PROJECT_NAME} PRIVATE torch "${ADDITIONAL_LIBRARY_DEPENDENCIES}")
++if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
++  target_include_directories(${PROJECT_NAME} PRIVATE /usr/include/libdrm)
++  target_link_libraries(${PROJECT_NAME} PRIVATE drm)
++endif()
+ 
+ if(CMAKE_SYSTEM_NAME MATCHES "NintendoSwitch")
+ 
+diff --git a/src/core2/gameloop.c b/src/core2/gameloop.c
+index adcdb0d..3b88f91 100644
+--- a/src/core2/gameloop.c
++++ b/src/core2/gameloop.c
+@@ -69,6 +69,11 @@ u8 GetCurrentMap() {
+     return sGameState.map;
+ }
+ 
++// [port] read by the BananaOS companion screen (src/port/BananaPanel.cpp)
++int GetCurrentGameMode(void) {
++    return sGameState.game_mode;
++}
++
+ void func_802E3800(void){
+     viewport_setPosition_f3(0.0f, 0.0f, 0.0f);
+     viewport_setRotation_f3(-30.0f, 30.0f, 0.0f);
+@@ -520,6 +525,10 @@ void func_802E4384(void){
+ static s32 sSkipDrawFrames = 0;
+ 
+ bool game_update(void) {
++    // [port] BananaOS companion screen: snapshot the game state (src/port/BananaPanel.cpp)
++    extern void BananaPanel_GameTick(void) __attribute__((weak));
++    if (BananaPanel_GameTick) BananaPanel_GameTick();
++
+     s32 sp1C;
+     u8 temp_v0;
+ 

@@ -1,0 +1,21 @@
+diff --git a/src/fast/backends/gfx_sdl2.cpp b/src/fast/backends/gfx_sdl2.cpp
+index 15c5415..acbd653 100644
+--- a/src/fast/backends/gfx_sdl2.cpp
++++ b/src/fast/backends/gfx_sdl2.cpp
+@@ -1,5 +1,7 @@
+ #if defined(ENABLE_OPENGL) || defined(__APPLE__)
+ 
++struct SDL_Window;
++extern "C" void BananaPanel_Start(SDL_Window*) __attribute__((weak));
+ #include <stdio.h>
+ 
+ #include "fast/Fast3dWindow.h"
+@@ -414,6 +416,8 @@ void GfxWindowBackendSDL2::Init(const char* gameName, const char* gfxApiName, bo
+         mCtx = SDL_GL_CreateContext(mWnd);
+ 
+         SDL_GL_MakeCurrent(mWnd, mCtx);
++        // BananaOS: the companion screen on the bottom panel (src/port/BananaPanel.cpp in the game)
++        if (BananaPanel_Start) BananaPanel_Start(mWnd);
+         SDL_GL_SetSwapInterval(mVsyncEnabled ? 1 : 0);
+ 
+         window_impl.Opengl = { mWnd, mCtx };
