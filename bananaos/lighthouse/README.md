@@ -3,8 +3,8 @@
 A companion screen for [HarbourMasters/Lighthouse](https://github.com/HarbourMasters/Lighthouse) (the Banjo-Kazooie PC port)
 on dual-screen handhelds running **bananaOS**: the game stays on the top panel, the bottom panel shows Banjo's stats.
 
-> **This is the Linux / bananaOS version**, not the Android app. The Android companion display lives in `android/` on the
-> [`android` branch](https://github.com/GASQBDUV/BanjoRecomp-Android/tree/android) of this repository; this screen's layout is taken from it. Nothing else on this branch is used here.
+> **This is the Linux / bananaOS version**, not the Android app. The Android companion display lives in `android/` of this
+> repository; this screen's layout is taken from it. Nothing else on this branch is used here.
 
 What the bottom panel shows (only while playing, black in cutscenes, the title screen and the pause menu):
 lives, health honeycombs, notes, eggs, red and gold feathers, Jiggies, Mumbo tokens, the five Jinjos (or the total completion in
@@ -52,5 +52,5 @@ On the device, install the Lighthouse port (with its `bk.o2r`), put the binary n
 Banjo-Kazooie is Rare/Nintendo's. You need your own copy of the game.
 
 - [Lighthouse](https://github.com/HarbourMasters/Lighthouse) by HarbourMasters, the game this screen is for, and the Linux handheld build by [Jeod](https://github.com/JeodC).
-- [BanjoRecomp-Android](https://github.com/GASQBDUV/BanjoRecomp-Android) (the `android` branch of this repository), the Android port with the dual-screen companion display this layout comes from.
+- [BanjoRecomp-Android](https://github.com/GASQBDUV/BanjoRecomp-Android) (this repository), the Android port with the dual-screen companion display this layout comes from.
 - [Banjo: Recompiled](https://github.com/BanjoRecomp/BanjoRecomp), the PC recompilation that the Android port is built on.
